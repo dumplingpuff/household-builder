@@ -170,7 +170,6 @@ SUBMIT_BUTTON_EL.addEventListener('click', event => {
   event.preventDefault(); // prevent page reload
 
   const json = JSON.stringify(Object.values(state.membersMap));
-  const RESULT_EL = document.querySelector('pre');
 
   RESULT_EL.innerHTML = json;
   RESULT_EL.style.display = 'block';
