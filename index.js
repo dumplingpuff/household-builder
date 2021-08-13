@@ -10,7 +10,7 @@ const state = {
   membersMap: {}
 }
 
-const FIELDS_OBJ = [
+const FORM_FIELDS = [
   { 
     id: 'age', 
     label: 'Age', 
@@ -35,6 +35,8 @@ const FIELDS_OBJ = [
   }
 ];
 
+/* ELEMENT CREATORS */
+
 const createFamilyMemberElement = (obj, id) => {
   const elementId = `person-${id}`;
   const member_el = createElement({ tag: 'li', attributes: { id: elementId }});
@@ -49,21 +51,25 @@ const createFamilyMemberElement = (obj, id) => {
   member_details_el.append(createRemoveButton(id, elementId));
   member_el.append(member_details_el);
   return member_el;
-}
+};
 
 const createRemoveButton = (memberId, elementId)=> {
   const button = createElement({ tag: 'button', value: 'remove' });
+
   button.addEventListener('click', function () {
     document.querySelector(`#${elementId}`).remove();
     delete state.membersMap[memberId];
     resetSubmissionText();
   });
+
   return button;
 };
 
+/* DOM MANIPULATORS */
+
 const resetFields = () => {
-  FIELDS_OBJ.forEach(field => {
-    resetValue(field.element);
+  FORM_FIELDS.forEach(({ element }) => {
+    resetValue(element);
   });
 };
 
@@ -73,8 +79,10 @@ const resetSubmissionText = () => {
   }
 };
 
+/* VALIDATION */
+
 const getValidationErrors = () => {
-  return FIELDS_OBJ
+  return FORM_FIELDS
   .filter(field => {
     const requiredAndHasNoValue = field.isRequired && !getValue(field.element);
 
@@ -89,39 +97,18 @@ const alertValidationErrors = errors => {
   alert(validationErrors);
 };
 
-const createPersonData = () => {
-  return FIELDS_OBJ.reduce((obj, field) => {
-    obj[field.id] = getValue(field.element);
+/* DATA GENERATOR */
+
+const createMemberData = () => {
+  return FORM_FIELDS.reduce((obj, field) => {
+    obj[field.label.toLowerCase()] = getValue(field.element);
     
     return obj;
   }, {});
-}
-
-
-ADD_BUTTON_EL.addEventListener('click', event => {
-  event.preventDefault(); // prevent page reload
-  const errors = getValidationErrors();
-  if (errors.length) {
-    alertValidationErrors(errors);
-    return;
-  }
-  const personId = Date.now();
-  const newPerson = createPersonData();
-  state.membersMap[personId] = newPerson;
-  HOUSEHOLD_EL.append(createFamilyMemberElement(newPerson, personId));
-  resetFields();
-  resetSubmissionText();
-});
-
-SUBMIT_BUTTON_EL.addEventListener('click', event => {
-  event.preventDefault(); // prevent page reload
-  const json = JSON.stringify(Object.values(state.membersMap));
-  const RESULT_EL = document.querySelector('pre');
-  RESULT_EL.innerHTML = json;
-  RESULT_EL.style.display = 'block';
-});
+};
 
 /* UTIL FUNCTIONS */
+
 const getValue = element => {
   const { type } = element;
   switch(type) {
@@ -130,7 +117,7 @@ const getValue = element => {
     default:
       return element.value;
   }
-}
+};
 
 const resetValue = element => {
   const { type } = element;
@@ -140,7 +127,7 @@ const resetValue = element => {
     default:
       element.value = '';
   }
-}
+};
 
 const createElement = ({ tag, attributes, value }) => {
   const elem = document.createElement(tag);
@@ -156,4 +143,35 @@ const createElement = ({ tag, attributes, value }) => {
   }
 
   return elem;
-}
+};
+
+/* ADD EVENT LISTENERS */
+
+ADD_BUTTON_EL.addEventListener('click', event => {
+  event.preventDefault(); // prevent page reload
+
+  const errors = getValidationErrors();
+  if (errors.length) {
+    alertValidationErrors(errors);
+    return;
+  }
+
+  const personId = Date.now();
+  const newPerson = createMemberData();
+
+  state.membersMap[personId] = newPerson;
+  HOUSEHOLD_EL.append(createFamilyMemberElement(newPerson, personId));
+
+  resetFields();
+  resetSubmissionText();
+});
+
+SUBMIT_BUTTON_EL.addEventListener('click', event => {
+  event.preventDefault(); // prevent page reload
+
+  const json = JSON.stringify(Object.values(state.membersMap));
+  const RESULT_EL = document.querySelector('pre');
+
+  RESULT_EL.innerHTML = json;
+  RESULT_EL.style.display = 'block';
+});
